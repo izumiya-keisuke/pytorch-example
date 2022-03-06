@@ -44,21 +44,13 @@ def train() -> None:
     test_loader: DataLoader = DataLoader(test_set, batch_size, pin_memory=True)
 
     # model
+    mid_dim: int = 128
     model: nn.Module = nn.Sequential(
-        nn.Conv2d(1, 8, 3, 1, 1, bias=False),
-        nn.BatchNorm2d(8),
-        nn.ReLU(),
-        nn.Conv2d(8, 16, 3, 1, 1, bias=False),
-        nn.BatchNorm2d(16),
-        nn.ReLU(),
-        nn.Conv2d(16, 32, 3, 2, 1, bias=False),
-        nn.BatchNorm2d(32),
-        nn.ReLU(),
         nn.Flatten(),
-        nn.Linear(32 * 14 * 14, 512, bias=False),
-        nn.BatchNorm1d(512),
+        nn.Linear(1 * 28 * 28, mid_dim),
+        nn.BatchNorm1d(mid_dim),
         nn.ReLU(),
-        nn.Linear(512, 10),
+        nn.Linear(mid_dim, 10),
     ).to(device)
 
     # optimizer

@@ -27,7 +27,7 @@ from .data import make_mnist_datasets
 
 
 def train() -> None:
-    device: torch.device = torch.device("cpu")
+    device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # make datasets
     train_set: Dataset
@@ -36,7 +36,7 @@ def train() -> None:
     train_set, val_set, test_set = make_mnist_datasets()
 
     # make dataloaders
-    batch_size: int = 8
+    batch_size: int = 120
     train_loader: DataLoader = DataLoader(
         train_set, batch_size, shuffle=True, pin_memory=True, drop_last=True
     )
@@ -66,9 +66,7 @@ def train() -> None:
     for epoch in range(total_epochs):
         # train
         model.train()
-        for data, label in tqdm(
-            train_loader, desc=f"Epoch {epoch} | Train", leave=True, unit="step"
-        ):
+        for data, label in tqdm(train_loader, desc=f"Epoch {epoch} Train", leave=True, unit="step"):
             data: Tensor
             label: Tensor
 
@@ -89,7 +87,7 @@ def train() -> None:
         with torch.no_grad():
             loss_sum: float = 0.0
             for data, label in tqdm(
-                val_loader, desc=f"Epoch {epoch} | Validation", leave=True, unit="step"
+                val_loader, desc=f"Epoch {epoch} Validation", leave=True, unit="step"
             ):
                 data: Tensor
                 label: Tensor
@@ -121,7 +119,7 @@ def train() -> None:
 
             # acc
             predict: Tensor = model(data)
-            correct_num += (predict.max(-1)[0] == label).sum().item()
+            correct_num += (predict.argmax(-1) == label).sum().item()
             total_num += label.shape[0]
 
     print(f"Accuracy: {correct_num / total_num}:.1f")

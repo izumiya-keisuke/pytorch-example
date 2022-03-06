@@ -1,5 +1,6 @@
-_pycache__/
+__pycache__/
 /.venv/
 /poetry.lock
 
 resources/
+lightning_logs/

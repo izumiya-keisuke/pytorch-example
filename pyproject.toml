@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytorch-example"
-version = "0.3.6"
+version = "0.4.0"
 description = "Example codes with PyTorch"
 authors = ["Keisuke Izumiya <izumiya.keisuke.24@gmail.com>"]
 maintainers = ["Keisuke Izumiya <izumiya.keisuke.24@gmail.com>"]

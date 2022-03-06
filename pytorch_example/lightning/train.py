@@ -14,31 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import Optional, Union
+from typing import Union
 
 import torch.cuda
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import Dataset
-from torch.utils.data.dataloader import DataLoader
-from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 from torch import Tensor
-from torchvision.datasets import MNIST
 
-from ..data import make_mnist_transform, split_dataset
+from .data import DataModel
 
 
 class Model(LightningModule):
     def __init__(self) -> None:
         super().__init__()
-
-        self._dataset_dir: str = "./resources"
-        self._train_set: Optional[Dataset] = None
-        self._val_set: Optional[Dataset] = None
-        self._test_set: Optional[Dataset] = None
-
-        self._batch_size: int = 120
 
         self._module: nn.Module = self._make_model()
 
@@ -82,35 +72,6 @@ class Model(LightningModule):
     def test_epoch_end(self, outputs: list[Tensor]) -> None:
         self.log("acc/test", sum(outputs) / len(outputs))
 
-    def prepare_data(self) -> None:
-        MNIST(self._dataset_dir, train=True, download=True)
-        MNIST(self._dataset_dir, train=False, download=True)
-
-    def setup(self, stage: Optional[str] = None) -> None:
-        if stage is None or stage == "fit":
-            train_val_set: Dataset = MNIST(
-                self._dataset_dir, train=True, transform=make_mnist_transform()
-            )
-            self._train_set, self._val_set = split_dataset(train_val_set, [54000, 6000])
-
-        if stage is None or stage == "test":
-            self._test_set = MNIST(self._dataset_dir, train=False, transform=make_mnist_transform())
-
-    def train_dataloader(self):
-        return DataLoader(
-            self._train_set,
-            batch_size=self._batch_size,
-            shuffle=True,
-            pin_memory=True,
-            drop_last=True,
-        )
-
-    def val_dataloader(self):
-        return DataLoader(self._val_set, batch_size=self._batch_size, pin_memory=True)
-
-    def test_dataloader(self):
-        return DataLoader(self._test_set, batch_size=self._batch_size, pin_memory=True)
-
     @staticmethod
     def _make_model() -> nn.Module:
         mid_dim: int = 128
@@ -132,9 +93,10 @@ class Model(LightningModule):
 
 
 def train() -> None:
+    data_model: LightningDataModule = DataModel()
     model: LightningModule = Model()
 
     total_epochs: int = 50
     trainer: Trainer = Trainer(max_epochs=total_epochs, gpus=torch.cuda.device_count())
-    trainer.fit(model)
+    trainer.fit(model, data_model)
     trainer.test()

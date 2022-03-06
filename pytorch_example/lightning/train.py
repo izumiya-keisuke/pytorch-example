@@ -108,3 +108,4 @@ def train() -> None:
     total_epochs: int = 50
     trainer: Trainer = Trainer(max_epochs=total_epochs)
     trainer.fit(model)
+    trainer.test()

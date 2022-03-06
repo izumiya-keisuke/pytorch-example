@@ -44,7 +44,13 @@ class Model(LightningModule):
         return loss
 
     def training_epoch_end(self, outputs: list[Tensor]) -> None:
-        self.log("loss/train", sum(outputs) / len(outputs))
+        loss_sum: Union[float, Tensor] = 0.0
+        for output in outputs:
+            output: dict[str, Tensor]
+
+            loss_sum += output["loss"]
+
+        self.log("loss/val", loss_sum / len(outputs))
 
     def validation_step(self, batch: tuple[Tensor, Tensor], idx: int) -> dict[str, Tensor]:
         predict: Tensor = self(batch[0])
@@ -96,7 +102,7 @@ def train() -> None:
     data_model: LightningDataModule = DataModel()
     model: LightningModule = Model()
 
-    total_epochs: int = 50
+    total_epochs: int = 10
     trainer: Trainer = Trainer(max_epochs=total_epochs, gpus=torch.cuda.device_count())
     trainer.fit(model, data_model)
-    trainer.test()
+    trainer.test(dataloaders=data_model)

@@ -66,7 +66,7 @@ class Model(LightningModule):
         loss: Tensor = self._calc_loss(predict, batch[1])
         acc: Tensor = self._calc_acc(predict, batch[1])
         self.log("loss/val", loss)
-        self.log("acc/val", loss)
+        self.log("acc/val", acc)
 
     def test_step(self, batch: tuple[Tensor, Tensor], idx: int) -> None:
         predict: Tensor = self(batch[0])

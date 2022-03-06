@@ -19,6 +19,7 @@ from typing import Callable, Optional, Sequence
 import numpy as np
 import torch.utils.data
 import torchvision.transforms as transforms
+from torch import Tensor
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
 from torchvision.datasets import MNIST
@@ -49,13 +50,17 @@ def split_dataset(dataset: Dataset, lengths: Sequence[int]) -> list[Dataset]:
     return torch.utils.data.random_split(dataset, lengths)
 
 
-def make_mnist_datasets() -> tuple[Dataset, Dataset, Dataset]:
-    transform: Callable = transforms.Compose(
+def make_mnist_transform() -> Callable[[np.ndarray], Tensor]:
+    return transforms.Compose(
         [
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,)),
         ]
     )
+
+
+def make_mnist_datasets() -> tuple[Dataset, Dataset, Dataset]:
+    transform: Callable[[np.ndarray], Tensor] = make_mnist_transform()
 
     root: str = "./resources"
 

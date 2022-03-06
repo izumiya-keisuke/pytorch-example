@@ -26,7 +26,7 @@ from pytorch_lightning import LightningModule, Trainer
 from torch import Tensor
 from torchvision.datasets import MNIST
 
-from ..data import split_dataset
+from ..data import make_mnist_transform, split_dataset
 
 
 class Model(LightningModule):
@@ -79,11 +79,13 @@ class Model(LightningModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
         if stage is None or stage == "fit":
-            train_val_set: Dataset = MNIST(self._dataset_dir, train=True)
+            train_val_set: Dataset = MNIST(
+                self._dataset_dir, train=True, transform=make_mnist_transform()
+            )
             self._train_set, self._val_set = split_dataset(train_val_set, [54000, 6000])
 
         if stage is None or stage == "test":
-            self._test_set = MNIST(self._dataset_dir, train=False)
+            self._test_set = MNIST(self._dataset_dir, train=False, transform=make_mnist_transform())
 
     def train_dataloader(self):
         return DataLoader(

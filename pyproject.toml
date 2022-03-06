@@ -1,17 +1,26 @@
 [tool.poetry]
 name = "pytorch-example"
-version = "0.3.1"
+version = "0.3.2"
 description = "Example codes with PyTorch"
 authors = ["Keisuke Izumiya <izumiya.keisuke.24@gmail.com>"]
+maintainers = ["Keisuke Izumiya <izumiya.keisuke.24@gmail.com>"]
+license = "Apache-2.0"
+
+readme = "README.rst"
+
+repository = "https://github.com/izumiya-keisuke/pytorch-example"
 
 [tool.poetry.dependencies]
 python = "^3.9"
 
 numpy = "^1.22.2"
 pytorch-lightning = "^1.5.10"
-torch = "^1.10.2"
-torchvision = "^0.11.3"
+torch = {version = "^1.10.2", optional = true}
+torchvision = {version = "^0.11.3", optional = true}
 tqdm = "^4.63.0"
+
+[tool.poetry.extras]
+pytorch = ["torch", "torchvision"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

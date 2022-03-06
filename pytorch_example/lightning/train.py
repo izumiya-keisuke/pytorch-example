@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import Optional
+from typing import Optional, Union
 
 import torch.cuda
 import torch.nn as nn
@@ -40,14 +40,7 @@ class Model(LightningModule):
 
         self._batch_size: int = 120
 
-        mid_dim: int = 128
-        self._module: nn.Module = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(1 * 28 * 28, mid_dim),
-            nn.BatchNorm1d(mid_dim),
-            nn.ReLU(),
-            nn.Linear(mid_dim, 10),
-        )
+        self._module: nn.Module = self._make_model()
 
     def forward(self, x: Tensor) -> Tensor:
         return self._module(x)
@@ -58,20 +51,36 @@ class Model(LightningModule):
     def training_step(self, batch: tuple[Tensor, Tensor], idx: int) -> Tensor:
         predict: Tensor = self(batch[0])
         loss: Tensor = self._calc_loss(predict, batch[1])
-        self.log("loss/train", loss)
         return loss
 
-    def validation_step(self, batch: tuple[Tensor, Tensor], idx: int) -> None:
+    def training_epoch_end(self, outputs: list[Tensor]) -> None:
+        self.log("loss/train", sum(outputs) / len(outputs))
+
+    def validation_step(self, batch: tuple[Tensor, Tensor], idx: int) -> dict[str, Tensor]:
         predict: Tensor = self(batch[0])
         loss: Tensor = self._calc_loss(predict, batch[1])
         acc: Tensor = self._calc_acc(predict, batch[1])
-        self.log("loss/val", loss)
-        self.log("acc/val", acc)
+        return {"loss": loss, "acc": acc}
 
-    def test_step(self, batch: tuple[Tensor, Tensor], idx: int) -> None:
+    def validation_epoch_end(self, outputs: list[dict[str, Tensor]]) -> None:
+        loss_sum: Union[float, Tensor] = 0.0
+        acc_sum: Union[float, Tensor] = 0.0
+        for output in outputs:
+            output: dict[str, Tensor]
+
+            loss_sum += output["loss"]
+            acc_sum += output["acc"]
+
+        self.log("loss/val", loss_sum / len(outputs))
+        self.log("acc/val", acc_sum / len(outputs))
+
+    def test_step(self, batch: tuple[Tensor, Tensor], idx: int) -> Tensor:
         predict: Tensor = self(batch[0])
         acc: Tensor = self._calc_acc(predict, batch[1])
-        self.log("acc/test", acc)
+        return acc
+
+    def test_epoch_end(self, outputs: list[Tensor]) -> None:
+        self.log("acc/test", sum(outputs) / len(outputs))
 
     def prepare_data(self) -> None:
         MNIST(self._dataset_dir, train=True, download=True)
@@ -101,6 +110,17 @@ class Model(LightningModule):
 
     def test_dataloader(self):
         return DataLoader(self._test_set, batch_size=self._batch_size, pin_memory=True)
+
+    @staticmethod
+    def _make_model() -> nn.Module:
+        mid_dim: int = 128
+        return nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(1 * 28 * 28, mid_dim),
+            nn.BatchNorm1d(mid_dim),
+            nn.ReLU(),
+            nn.Linear(mid_dim, 10),
+        )
 
     @staticmethod
     def _calc_loss(predict: Tensor, label: Tensor) -> Tensor:

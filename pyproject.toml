@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "pytorch-example"
-version = "0.1.1"
+version = "0.1.2"
 description = "Example codes with PyTorch"
 authors = ["Keisuke Izumiya <izumiya.keisuke.24@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
 
-numpy = "^1.22.1"
+numpy = "^1.22.2"
 torch = "^1.10.2"
 
 [build-system]
